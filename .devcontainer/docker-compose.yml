@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  aggregator:
+    image: python:3.9.15-slim-bullseye
+    volumes:
+      - ../..:/app
+    command: sleep infinity
+    network_mode: service:db
+
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: example
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    network_mode: service:db
+
