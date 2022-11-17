@@ -2,7 +2,7 @@
 {
 	"name": "Suricate",
 	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
+	"service": "aggregator",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
 		"ghcr.io/devcontainers/features/python:1": {}
