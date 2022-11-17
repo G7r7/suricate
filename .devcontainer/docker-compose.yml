@@ -6,16 +6,15 @@ services:
     volumes:
       - ../..:/app
     command: sleep infinity
-    network_mode: service:db
 
   db:
-    image: mariadb
+    image: mariadb:10.9.4-jammy
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: example
 
   adminer:
-    image: adminer
+    image: adminer:4.8.1-standalone
     restart: always
     ports:
       - 8080:8080
