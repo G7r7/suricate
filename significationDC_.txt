@@ -1,0 +1,6 @@
+DCPAF : Direction Centrale de la Police Aux Frontières
+DCSP : Direction centrale de la Sécurité publique
+DCCRS : Direction Centrale des Compagnies Républicaines de Sécurité
+DCPJ : Direction Centrale de la Police Judiciaire
+PN : Police national
+GN : Gendarmerie national
