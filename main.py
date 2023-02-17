@@ -14,18 +14,37 @@ if not os.path.isfile(nomFichier):
     r = requests.get('https://www.data.gouv.fr/fr/datasets/r/d792092f-b1f7-4180-a367-d043200c1520', allow_redirects=True)
     if r.status_code == 200:
         open(nomFichier, 'wb').write(r.content)
-sheet_to_df_map = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
-sheet_to_df_map.drop(index=2) # On enlève la ligne des noms de brigades
+gendarmerie = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
+gendarmerie.drop(index=2) # On enlève la ligne des noms de brigades
 # On isole les 2 premières colonnes
-crimes_index = sheet_to_df_map.iloc[:,0:2]
+crimes_index = gendarmerie.iloc[:,0:2]
 # We rename the columns with the value of the first row
 crimes_index.columns = crimes_index.iloc[0]
 crimes_index = crimes_index.iloc[1:]
 # On enlève les deux premières colonnes
-sheet_to_df_map = sheet_to_df_map.iloc[:,2:]
-sheet_to_df_map = sheet_to_df_map.rename(columns=lambda x: re.sub('\.\d+$', '', x))
+gendarmerie = gendarmerie.iloc[:,2:]
+gendarmerie = gendarmerie.rename(columns=lambda x: re.sub('\.\d+$', '', x))
+# On enlèves les colonnes dont le nom est plus long que 2 caractères
+gendarmerie = gendarmerie.loc[:, gendarmerie.columns.str.len() <= 2]
 # Group columns by name and sum values, we ignore null or empty values
-sheet_to_df_map = sheet_to_df_map.groupby(sheet_to_df_map.columns, axis=1).sum()
+gendarmerie = gendarmerie.groupby(gendarmerie.columns, axis=1).sum()
+
+
+
+police = pd.read_excel(nomFichier, sheet_name="Services PN 2017")
+police.drop(index=2) # On enlève la ligne des noms de brigades
+# On isole les 2 premières colonnes
+crimes_index = police.iloc[:,0:2]
+# We rename the columns with the value of the first row
+crimes_index.columns = crimes_index.iloc[0]
+crimes_index = crimes_index.iloc[1:]
+# On enlève les deux premières colonnes
+police = police.iloc[:,2:]
+police = police.rename(columns=lambda x: re.sub('\.\d+$', '', x))
+# On enlèves les colonnes dont le nom est plus long que 2 caractères
+police = police.loc[:, police.columns.str.len() <= 2]
+# Group columns by name and sum values, we ignore null or empty values
+police = police.groupby(police.columns, axis=1).sum()
 
 # Class Crime wich is an object with a name, a code and an integer value (with type hints) 
 class Crime:
@@ -55,22 +74,26 @@ class Departements(List[Departement]):
 departements = Departements([])
 
 # Iterate over every column
-for col in sheet_to_df_map.columns:
+for col in gendarmerie.columns:
     # For each column we create an Object of type Departement
     # We get the name of the departement from the name of the column
     departement = Departement(str(col), [])
     # We add the crimes to the departement
-    for i in range(1, len(sheet_to_df_map[col])):
+    for i in range(1, len(gendarmerie[col])):
         # We create an object of type Crime for each entry in the column
         # We get the index code of the crime from crime_index, the index code is the value in column 0
         code = crimes_index.iloc[i-1][0]
         # We get the name of the crime from crime index, the name of the crime is the value on the second column of the row
         name = crimes_index.iloc[i-1][1]
-        crime = Crime(name, code, sheet_to_df_map[col].iloc[i])
+        crime = Crime(name, code, gendarmerie[col].iloc[i])
         # We add the object to the array of crimes
         departement.crimes.append(crime)
     # We add the object to the array of departements
     departements.append(departement)  
+
+# We list all our departements name
+for departement in departements:
+    print(departement.name)
 
 # nomFichier = 'elections.xlsx'
 # if not os.path.isfile(nomFichier):
