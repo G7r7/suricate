@@ -1,3 +1,4 @@
+import re
 import requests
 import pandas as pd
 import csv
@@ -14,8 +15,62 @@ if not os.path.isfile(nomFichier):
     if r.status_code == 200:
         open(nomFichier, 'wb').write(r.content)
 sheet_to_df_map = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
-print(sheet_to_df_map)
+sheet_to_df_map.drop(index=2) # On enlève la ligne des noms de brigades
+# On isole les 2 premières colonnes
+crimes_index = sheet_to_df_map.iloc[:,0:2]
+# We rename the columns with the value of the first row
+crimes_index.columns = crimes_index.iloc[0]
+crimes_index = crimes_index.iloc[1:]
+# On enlève les deux premières colonnes
+sheet_to_df_map = sheet_to_df_map.iloc[:,2:]
+sheet_to_df_map = sheet_to_df_map.rename(columns=lambda x: re.sub('\.\d+$', '', x))
+# Group columns by name and sum values, we ignore null or empty values
+sheet_to_df_map = sheet_to_df_map.groupby(sheet_to_df_map.columns, axis=1).sum()
 
+# Class Crime wich is an object with a name, a code and an integer value (with type hints) 
+class Crime:
+    def __init__(self, name: str, code: str, value: int):
+        self.name = name
+        self.code = code
+        self.value = value
+
+# Class Departement wich containes the name of the departement and an array of object of type Crime with type hints
+class Departement:
+    def __init__(self, name: str, crimes: List[Crime]):
+        self.name = name
+        self.crimes = crimes
+    
+    # Method to calculate the total number of crimes in a departement
+    def total_crimes(self) -> int:
+        total = 0
+        for crime in self.crimes:
+            total += crime.value
+        return total
+
+# Class Departements which inehrits from List of object of type Departement with type hints
+class Departements(List[Departement]):
+    pass
+
+# We create an object of type Departements
+departements = Departements([])
+
+# Iterate over every column
+for col in sheet_to_df_map.columns:
+    # For each column we create an Object of type Departement
+    # We get the name of the departement from the name of the column
+    departement = Departement(str(col), [])
+    # We add the crimes to the departement
+    for i in range(1, len(sheet_to_df_map[col])):
+        # We create an object of type Crime for each entry in the column
+        # We get the index code of the crime from crime_index, the index code is the value in column 0
+        code = crimes_index.iloc[i-1][0]
+        # We get the name of the crime from crime index, the name of the crime is the value on the second column of the row
+        name = crimes_index.iloc[i-1][1]
+        crime = Crime(name, code, sheet_to_df_map[col].iloc[i])
+        # We add the object to the array of crimes
+        departement.crimes.append(crime)
+    # We add the object to the array of departements
+    departements.append(departement)  
 
 # nomFichier = 'elections.xlsx'
 # if not os.path.isfile(nomFichier):
@@ -64,8 +119,8 @@ class DataForOneDep(BaseModel):
 class Data(BaseModel):
     deps: List[DataForOneDep] = []
 
-print(Data.schema_json(indent=2))
+# print(Data.schema_json(indent=2))
 
 external_data = {'deps':[{'departement': 123, 'taux_criminalite': 0.34, 'gagnant': "LePPEN"}]}
 user = Data(**external_data)
-print(user)
+# print(user)
