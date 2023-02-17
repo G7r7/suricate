@@ -1,3 +1,4 @@
+import re
 import requests
 import pandas as pd
 import csv
@@ -8,16 +9,93 @@ from typing import List, Optional
 
 print(pd. __version__)
 
-# nomFichier = 'crimes.xlsx'
-# if not os.path.isfile(nomFichier):
-#     r = requests.get('https://www.data.gouv.fr/fr/datasets/r/d792092f-b1f7-4180-a367-d043200c1520', allow_redirects=True)
-#     if r.status_code == 200:
-#         open(nomFichier, 'wb').write(r.content)
-# sheet_to_df_map = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
-# print(sheet_to_df_map)
+nomFichier = 'crimes.xlsx'
+if not os.path.isfile(nomFichier):
+    r = requests.get('https://www.data.gouv.fr/fr/datasets/r/d792092f-b1f7-4180-a367-d043200c1520', allow_redirects=True)
+    if r.status_code == 200:
+        open(nomFichier, 'wb').write(r.content)
+gendarmerie = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
+gendarmerie.drop(index=2) # On enlève la ligne des noms de brigades
+# On isole les 2 premières colonnes
+crimes_index = gendarmerie.iloc[:,0:2]
+# We rename the columns with the value of the first row
+crimes_index.columns = crimes_index.iloc[0]
+crimes_index = crimes_index.iloc[1:]
+# On enlève les deux premières colonnes
+gendarmerie = gendarmerie.iloc[:,2:]
+gendarmerie = gendarmerie.rename(columns=lambda x: re.sub('\.\d+$', '', x))
+# On enlèves les colonnes dont le nom est plus long que 2 caractères
+gendarmerie = gendarmerie.loc[:, gendarmerie.columns.str.len() <= 2]
+# Group columns by name and sum values, we ignore null or empty values
+gendarmerie = gendarmerie.groupby(gendarmerie.columns, axis=1).sum()
 
 
-nomFichier = 'elections.xlsx'
+
+police = pd.read_excel(nomFichier, sheet_name="Services PN 2017")
+police.drop(index=2) # On enlève la ligne des noms de brigades
+# On isole les 2 premières colonnes
+crimes_index = police.iloc[:,0:2]
+# We rename the columns with the value of the first row
+crimes_index.columns = crimes_index.iloc[0]
+crimes_index = crimes_index.iloc[1:]
+# On enlève les deux premières colonnes
+police = police.iloc[:,2:]
+police = police.rename(columns=lambda x: re.sub('\.\d+$', '', x))
+# On enlèves les colonnes dont le nom est plus long que 2 caractères
+police = police.loc[:, police.columns.str.len() <= 2]
+# Group columns by name and sum values, we ignore null or empty values
+police = police.groupby(police.columns, axis=1).sum()
+
+# Class Crime wich is an object with a name, a code and an integer value (with type hints) 
+class Crime:
+    def __init__(self, name: str, code: str, value: int):
+        self.name = name
+        self.code = code
+        self.value = value
+
+# Class Departement wich containes the name of the departement and an array of object of type Crime with type hints
+class Departement:
+    def __init__(self, name: str, crimes: List[Crime]):
+        self.name = name
+        self.crimes = crimes
+    
+    # Method to calculate the total number of crimes in a departement
+    def total_crimes(self) -> int:
+        total = 0
+        for crime in self.crimes:
+            total += crime.value
+        return total
+
+# Class Departements which inehrits from List of object of type Departement with type hints
+class Departements(List[Departement]):
+    pass
+
+# We create an object of type Departements
+departements = Departements([])
+
+# Iterate over every column
+for col in gendarmerie.columns:
+    # For each column we create an Object of type Departement
+    # We get the name of the departement from the name of the column
+    departement = Departement(str(col), [])
+    # We add the crimes to the departement
+    for i in range(1, len(gendarmerie[col])):
+        # We create an object of type Crime for each entry in the column
+        # We get the index code of the crime from crime_index, the index code is the value in column 0
+        code = crimes_index.iloc[i-1][0]
+        # We get the name of the crime from crime index, the name of the crime is the value on the second column of the row
+        name = crimes_index.iloc[i-1][1]
+        crime = Crime(name, code, gendarmerie[col].iloc[i])
+        # We add the object to the array of crimes
+        departement.crimes.append(crime)
+    # We add the object to the array of departements
+    departements.append(departement)  
+
+# We list all our departements name
+for departement in departements:
+    print(departement.name)
+
+# nomFichier = 'elections.xlsx'
 # if not os.path.isfile(nomFichier):
 #     r = requests.get('https://www.data.gouv.fr/fr/datasets/r/53e2b3df-b89b-4df8-971d-7f2e0f02640a', allow_redirects=True)
 #     if r.status_code == 200:
@@ -70,8 +148,8 @@ class DataForOneDep(BaseModel):
 class Data(BaseModel):
     deps: List[DataForOneDep] = []
 
-print(Data.schema_json(indent=2))
+# print(Data.schema_json(indent=2))
 
 external_data = {'deps':[{'departement': '2A', 'taux_criminalite': 0.34, 'gagnant': "LePPEN"}]}
 user = Data(**external_data)
-print(user)
+# print(user)
