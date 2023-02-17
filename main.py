@@ -7,7 +7,80 @@ from pydantic import BaseModel
 import json
 from typing import List, Optional
 
+# Class Crime wich is an object with a name, a code and an integer value (with type hints) 
+class Crime:
+    def __init__(self, name: str, code: str, value: int):
+        self.name = name
+        self.code = code
+        self.value = value
+
+# Class Departement wich containes the name of the departement and an array of object of type Crime with type hints
+class Departement:
+    def __init__(self, code: str, name: str, gagnant: str, population: int, crimes: List[Crime]):
+        self.code = code
+        self.name = name
+        self.crimes = crimes
+        self.gagnant = gagnant
+        self.population = population
+    
+    # Method to calculate the total number of crimes in a departement
+    def total_crimes(self) -> int:
+        total = 0
+        for crime in self.crimes:
+            total += crime.value
+        return total
+
+# Class Departements which inehrits from List of object of type Departement with type hints
+class Departements(List[Departement]):
+    pass
+
 print(pd. __version__)
+
+nomFichier = 'elections.xlsx'
+# if not os.path.isfile(nomFichier):
+#     r = requests.get('https://www.data.gouv.fr/fr/datasets/r/53e2b3df-b89b-4df8-971d-7f2e0f02640a', allow_redirects=True)
+#     if r.status_code == 200:
+#         open(nomFichier, 'wb').write(r.content)
+sheet_to_df_map = pd.read_excel(nomFichier, sheet_name=None)["Presidentielle_2017_Resultats_Département_T1_clean"]
+interets = sheet_to_df_map[["CodeDépartement", "Département", "LE PEN_exp","MACRON_exp","MÉLENCHON_exp","FILLON_exp","HAMON_exp","DUPONT-AIGNAN_exp","LASSALLE_exp","POUTOU_exp","ASSELINEAU_exp","ARTHAUD_exp","CHEMINADE_exp"]]
+results = interets.iloc[:,-11:]
+# print(results)
+maxResults = results.idxmax(1)
+
+# We create a list of departements
+departements = Departements()
+
+for i in range(len(maxResults)):
+    dep = str(interets["CodeDépartement"][i])
+    res = maxResults[i][:-4]
+    if dep[0] != 'Z': #on retire les outres mers
+        if len(dep) == 1:
+            dep = '0'+dep
+            # print(dep, interets["Département"][i], res)
+            # We add a departement to the list where the departement code is dep, the departement name is interets["Département"][i], the gagnant is res and the list of crimes is empty and population is 0
+            departements.append(Departement(dep, interets["Département"][i], res, 0, []))
+
+nomFichier = 'Departements.csv'
+# if not os.path.isfile(nomFichier):
+#     r = requests.get('https://www.insee.fr/fr/statistiques/fichier/4265429/ensemble.xls', allow_redirects=True)
+#     if r.status_code == 200:
+#         open(nomFichier, 'wb').write(r.content)
+# sheet_to_df_map = pd.read_excel(nomFichier, sheet_name="Départements")
+# print(sheet_to_df_map)
+with open(nomFichier, newline='') as csvfile:
+    spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+    for row in spamreader:
+        if len(row) and row[0]:
+            words = ' '.join(row).split(';')
+            dep = words[0]
+            hab = words[-2]
+            if len(dep) == 2: #on retire les outres mers
+                # print(dep, hab)
+                # We add the population to the departement with the code dep
+                for departement in departements:
+                    if departement.code == dep:
+                        departement.population = int(hab)
+
 
 nomFichier = 'crimes.xlsx'
 if not os.path.isfile(nomFichier):
@@ -30,7 +103,6 @@ gendarmerie = gendarmerie.loc[:, gendarmerie.columns.str.len() <= 2]
 gendarmerie = gendarmerie.groupby(gendarmerie.columns, axis=1).sum()
 
 
-
 police = pd.read_excel(nomFichier, sheet_name="Services PN 2017")
 police.drop(index=2) # On enlève la ligne des noms de brigades
 # On isole les 2 premières colonnes
@@ -46,95 +118,24 @@ police = police.loc[:, police.columns.str.len() <= 2]
 # Group columns by name and sum values, we ignore null or empty values
 police = police.groupby(police.columns, axis=1).sum()
 
-# Class Crime wich is an object with a name, a code and an integer value (with type hints) 
-class Crime:
-    def __init__(self, name: str, code: str, value: int):
-        self.name = name
-        self.code = code
-        self.value = value
+# We merge police and gendarmerie (we ignore strings)
+crimes = police.add(gendarmerie, fill_value=0)
 
-# Class Departement wich containes the name of the departement and an array of object of type Crime with type hints
-class Departement:
-    def __init__(self, name: str, crimes: List[Crime]):
-        self.name = name
-        self.crimes = crimes
-    
-    # Method to calculate the total number of crimes in a departement
-    def total_crimes(self) -> int:
-        total = 0
-        for crime in self.crimes:
-            total += crime.value
-        return total
-
-# Class Departements which inehrits from List of object of type Departement with type hints
-class Departements(List[Departement]):
-    pass
-
-# We create an object of type Departements
-departements = Departements([])
-
-# Iterate over every column
-for col in gendarmerie.columns:
-    # For each column we create an Object of type Departement
-    # We get the name of the departement from the name of the column
-    departement = Departement(str(col), [])
-    # We add the crimes to the departement
-    for i in range(1, len(gendarmerie[col])):
+# For each departement we add the crimes
+for departement in departements:
+    # We get the column with the code of the departement
+    col = crimes[departement.code]
+    # We iterate over the column
+    for i in range(1, len(col)):
         # We create an object of type Crime for each entry in the column
         # We get the index code of the crime from crime_index, the index code is the value in column 0
         code = crimes_index.iloc[i-1][0]
         # We get the name of the crime from crime index, the name of the crime is the value on the second column of the row
         name = crimes_index.iloc[i-1][1]
-        crime = Crime(name, code, gendarmerie[col].iloc[i])
+        crime = Crime(name, code, col.iloc[i])
         # We add the object to the array of crimes
         departement.crimes.append(crime)
-    # We add the object to the array of departements
-    departements.append(departement)  
 
-# We list all our departements name
-for departement in departements:
-    print(departement.name)
-
-# nomFichier = 'elections.xlsx'
-# if not os.path.isfile(nomFichier):
-#     r = requests.get('https://www.data.gouv.fr/fr/datasets/r/53e2b3df-b89b-4df8-971d-7f2e0f02640a', allow_redirects=True)
-#     if r.status_code == 200:
-#         open(nomFichier, 'wb').write(r.content)
-sheet_to_df_map = pd.read_excel(nomFichier, sheet_name=None)["Presidentielle_2017_Resultats_Département_T1_clean"]
-interets = sheet_to_df_map[["CodeDépartement", "Département", "LE PEN_exp","MACRON_exp","MÉLENCHON_exp","FILLON_exp","HAMON_exp","DUPONT-AIGNAN_exp","LASSALLE_exp","POUTOU_exp","ASSELINEAU_exp","ARTHAUD_exp","CHEMINADE_exp"]]
-results = interets.iloc[:,-11:]
-# print(results)
-maxResults = results.idxmax(1)
-for i in range(len(maxResults)):
-    dep = str(interets["CodeDépartement"][i])
-    res = maxResults[i][:-4]
-    if dep[0] != 'Z': #on retire les outres mers
-        if len(dep) == 1:
-            dep = '0'+dep
-        print(dep, interets["Département"][i], res)
-
-# listCol = 
-# for col in listCol:
-#     print(sheet_to_df_map[col].max())
-
-
-nomFichier = 'Departements.csv'
-# if not os.path.isfile(nomFichier):
-#     r = requests.get('https://www.insee.fr/fr/statistiques/fichier/4265429/ensemble.xls', allow_redirects=True)
-#     if r.status_code == 200:
-#         open(nomFichier, 'wb').write(r.content)
-# sheet_to_df_map = pd.read_excel(nomFichier, sheet_name="Départements")
-# print(sheet_to_df_map)
-with open(nomFichier, newline='') as csvfile:
-    spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-    for row in spamreader:
-        if len(row) and row[0]:
-            words = ' '.join(row).split(';')
-            dep = words[0]
-            hab = words[-2]
-            if len(dep) == 2: #on retire les outres mers
-                print(dep, hab)
-        # print(row[-1].split(';')[-2])
 
 # https://stackoverflow.com/questions/69617813/generate-a-json-schema-specification-from-python-classes
 # https://github.com/pydantic/pydantic
