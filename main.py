@@ -87,39 +87,50 @@ if not os.path.isfile(nomFichier):
     r = requests.get('https://www.data.gouv.fr/fr/datasets/r/d792092f-b1f7-4180-a367-d043200c1520', allow_redirects=True)
     if r.status_code == 200:
         open(nomFichier, 'wb').write(r.content)
-gendarmerie = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
-gendarmerie.drop(index=2) # On enlève la ligne des noms de brigades
+
+# Crime index
+sheet = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
 # On isole les 2 premières colonnes
-crimes_index = gendarmerie.iloc[:,0:2]
+crimes_index = sheet.iloc[:,0:2]
 # We rename the columns with the value of the first row
 crimes_index.columns = crimes_index.iloc[0]
-crimes_index = crimes_index.iloc[1:]
-# On enlève les deux premières colonnes
+# On enlève la ligne contenant le nom des colonnes
+crimes_index.drop(index=0, inplace=True) 
+
+# Gendarmerie
+gendarmerie = pd.read_excel(nomFichier, sheet_name="Services GN 2017")
+# On enlève la ligne des noms de brigades
+gendarmerie.drop(index=0, inplace=True) 
+# On enlève les 2 premières colonnes
 gendarmerie = gendarmerie.iloc[:,2:]
+# On renomme les colonnes 91.1 91.2 91.3 en 91 ...
 gendarmerie = gendarmerie.rename(columns=lambda x: re.sub('\.\d+$', '', x))
 # On enlèves les colonnes dont le nom est plus long que 2 caractères
 gendarmerie = gendarmerie.loc[:, gendarmerie.columns.str.len() <= 2]
 # Group columns by name and sum values, we ignore null or empty values
 gendarmerie = gendarmerie.groupby(gendarmerie.columns, axis=1).sum()
+# We rename rows with 0,1,2...
+gendarmerie.reset_index(inplace=True, drop=True)
 
-
+# Police
 police = pd.read_excel(nomFichier, sheet_name="Services PN 2017")
-police.drop(index=2) # On enlève la ligne des noms de brigades
-# On isole les 2 premières colonnes
-crimes_index = police.iloc[:,0:2]
-# We rename the columns with the value of the first row
-crimes_index.columns = crimes_index.iloc[0]
-crimes_index = crimes_index.iloc[1:]
+# On enlève la ligne des noms de brigades
+police.drop(index=1, inplace=True)
+# On enlève la ligne des noms de brigades
+police.drop(index=0, inplace=True)
 # On enlève les deux premières colonnes
 police = police.iloc[:,2:]
+# On renomme les colonnes 91.1 91.2 91.3 en 91 ...
 police = police.rename(columns=lambda x: re.sub('\.\d+$', '', x))
 # On enlèves les colonnes dont le nom est plus long que 2 caractères
 police = police.loc[:, police.columns.str.len() <= 2]
 # Group columns by name and sum values, we ignore null or empty values
 police = police.groupby(police.columns, axis=1).sum()
+# We rename rows with 0,1,2...
+police.reset_index(inplace=True, drop=True)
 
-# We merge police and gendarmerie (we ignore strings)
-crimes = police.add(gendarmerie, fill_value=0)
+# We add the two dataframes (integers)
+crimes = gendarmerie.add(police, fill_value=0)
 
 # For each departement we add the crimes
 for departement in departements:
