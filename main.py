@@ -169,7 +169,7 @@ class Data(BaseModel):
 external_data = {}
 external_data['deps'] = []
 for departement in departements:
-    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime([2,3]), 'gagnant': departement.gagnant})
+    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime([]), 'gagnant': departement.gagnant})
 
 user = Data(**external_data)
 

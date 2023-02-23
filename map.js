@@ -19,18 +19,16 @@ function getMaxValue() {
     return external_data.deps.reduce((max, p) => p.taux_criminalite > max ? p.taux_criminalite : max, external_data.deps[0].taux_criminalite);
 }
 
-// Get color depending on the value of the crime rate
+// Get color depending on the value of the crime rate, white is 0% and red is 100%
 function getColor(d) {
     let max = getMaxValue();
     let min = getMinValue();
     let diff = max - min;
-    let step = diff / 5;
-    return d > min + step * 4 ? '#800026' :
-              d > min + step * 3  ? '#BD0026' :
-                d > min + step * 2  ? '#E31A1C' :
-                    d > min + step  ? '#FC4E2A' :
-                        '#FD8D3C';
-
+    let ratio = (d - min) / diff;
+    let r = Math.round(255 * ratio);
+    let g = Math.round(255 * (1 - ratio));
+    let b = 0;
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
 function style(feature) {
