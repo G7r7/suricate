@@ -57,8 +57,8 @@ for i in range(len(maxResults)):
         if len(dep) == 1:
             dep = '0'+dep
             # print(dep, interets["Département"][i], res)
-            # We add a departement to the list where the departement code is dep, the departement name is interets["Département"][i], the gagnant is res and the list of crimes is empty and population is 0
-            departements.append(Departement(dep, interets["Département"][i], res, 0, []))
+        # We add a departement to the list where the departement code is dep, the departement name is interets["Département"][i], the gagnant is res and the list of crimes is empty and population is 0
+        departements.append(Departement(dep, interets["Département"][i], res, 0, []))
 
 nomFichier = 'Departements.csv'
 # if not os.path.isfile(nomFichier):
