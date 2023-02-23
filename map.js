@@ -11,12 +11,26 @@ for(let i in departments.features) {
     }
 }
 
+function getMinValue() {
+    return external_data.deps.reduce((min, p) => p.taux_criminalite < min ? p.taux_criminalite : min, external_data.deps[0].taux_criminalite);
+}
+
+function getMaxValue() {
+    return external_data.deps.reduce((max, p) => p.taux_criminalite > max ? p.taux_criminalite : max, external_data.deps[0].taux_criminalite);
+}
+
+// Get color depending on the value of the crime rate
 function getColor(d) {
-	return d > 8? '#800026' :
-        d > 6 ? '#C70039' :
-        d > 4 ? '#EE4F4F' :
-        d > 2 ? '#EEAD4F' :
-        '#EBCE17';
+    let max = getMaxValue();
+    let min = getMinValue();
+    let diff = max - min;
+    let step = diff / 5;
+    return d > min + step * 4 ? '#800026' :
+              d > min + step * 3  ? '#BD0026' :
+                d > min + step * 2  ? '#E31A1C' :
+                    d > min + step  ? '#FC4E2A' :
+                        '#FD8D3C';
+
 }
 
 function style(feature) {
@@ -30,8 +44,13 @@ function style(feature) {
     }
 };
 
+// function to get percentage from ratio with the precision as a parameter
+function getPercentage(ratio, precision=8) {
+    return (ratio * 100).toFixed(precision);
+}
+
 function popup(feature, layer) {
-	layer.bindPopup(feature.properties.nom+", "+feature.properties.code+"</br>"+feature.properties.crimeRate+"% de criminalite</br>"+feature.properties.electionResult);
+	layer.bindPopup(feature.properties.nom+", "+feature.properties.code+"</br>"+getPercentage(feature.properties.crimeRate)+"% de criminalite</br>"+feature.properties.electionResult);
 }
 
 // Map layer

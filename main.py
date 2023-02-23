@@ -32,7 +32,7 @@ class Departement:
         return total
 
     def taux_crime(self, codes: List[int]) -> float:
-        return round(self.total_crimes(codes) / self.population * 100, 8)
+        return self.total_crimes(codes) / self.population
 
 # Class Departements which inehrits from List of object of type Departement with type hints
 class Departements(List[Departement]):
