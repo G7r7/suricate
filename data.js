@@ -1,4 +1,4 @@
-var external_data = {
+{
   "deps": [
     {
       "departement": "01",

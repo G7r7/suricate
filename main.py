@@ -24,14 +24,15 @@ class Departement:
         self.population = population
     
     # Method to calculate the total number of crimes in a departement
-    def total_crimes(self) -> int:
+    def total_crimes(self, codes: List[Crime]) -> int:
         total = 0
         for crime in self.crimes:
-            total += crime.value
+            if crime.code in codes or len(codes) == 0: # if the code of the crime is in the list of codes or if the list of codes is empty
+                total += crime.value
         return total
 
-    def taux_crime(self) -> float:
-        return round(self.total_crimes() / self.population * 100, 2)
+    def taux_crime(self, codes: List[Crime]) -> float:
+        return round(self.total_crimes(codes) / self.population * 100, 2)
 
 # Class Departements which inehrits from List of object of type Departement with type hints
 class Departements(List[Departement]):
@@ -168,7 +169,7 @@ class Data(BaseModel):
 external_data = {}
 external_data['deps'] = []
 for departement in departements:
-    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime(), 'gagnant': departement.gagnant})
+    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime([]), 'gagnant': departement.gagnant})
 
 user = Data(**external_data)
 
