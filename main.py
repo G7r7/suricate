@@ -175,5 +175,6 @@ user = Data(**external_data)
 
 # We export json to file
 with open('data.js', 'w') as outfile:
+    outfile.write('const external_data = ')
     json.dump(user.dict(), outfile, indent=2)
     

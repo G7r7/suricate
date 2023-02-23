@@ -1,4 +1,4 @@
-{
+const external_data = {
   "deps": [
     {
       "departement": "01",
