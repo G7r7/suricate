@@ -5,7 +5,8 @@
 	"service": "aggregator",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
-		"ghcr.io/devcontainers/features/python:1": {}
+		"ghcr.io/devcontainers/features/python:1": {},
+		"ghcr.io/devcontainers/features/git:1": {}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.

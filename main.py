@@ -31,7 +31,7 @@ class Departement:
         return total
 
     def taux_crime(self) -> float:
-        return self.total_crimes() / self.population
+        return round(self.total_crimes() / self.population * 100, 2)
 
 # Class Departements which inehrits from List of object of type Departement with type hints
 class Departements(List[Departement]):
@@ -173,6 +173,6 @@ for departement in departements:
 user = Data(**external_data)
 
 # We export json to file
-with open('data.json', 'w') as outfile:
+with open('data.js', 'w') as outfile:
     json.dump(user.dict(), outfile, indent=2)
     
