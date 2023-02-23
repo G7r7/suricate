@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>French Departments Map</title>
+    <!-- Include the Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  </head>
+  <body>
+    <!-- Create a div that will contain the map -->
+    <div id="map" style="height: 1000px;"></div>
+
+    <div style="background-color:white;padding:10px;position:fixed;z-index:400;bottom:40px;right:25px">
+        <h4 style="margin:10px">Taux de crime</h4>
+        <div style="display:flex;align-items:center;height:22px">
+            <div style="background-color:#800026;width:50px;height:20px;margin-right:20px"></div>
+            <p>> 8%</p>
+        </div>
+        <div style="display:flex;align-items:center;height:22px">
+            <div style="background-color:#C70039;width:50px;height:20px;margin-right:20px"></div>
+            <p>> 6%</p>
+        </div>
+        <div style="display:flex;align-items:center;height:22px">
+            <div style="background-color:#EE4F4F;width:50px;height:20px;margin-right:20px"></div>
+            <p>> 4%</p>
+        </div>
+        <div style="display:flex;align-items:center;height:22px">
+            <div style="background-color:#EEAD4F;width:50px;height:20px;margin-right:20px"></div>
+            <p>> 2%</p>
+        </div>
+        <div style="display:flex;align-items:center;height:22px">
+            <div style="background-color:#EBCE17;width:50px;height:20px;margin-right:20px"></div>
+            <p>0-2%</p>
+        </div>
+    </div>
+
+  </body>
+  <!-- Include the GeoJSON data for the French departments -->
+  <script src="departments.js"></script>
+  <!-- Include external_data -->
+  <script src="data.js"></script>
+  <!-- Include the JavaScript file that contains the map code -->
+  <script  src="map.js"></script>
+</html>
