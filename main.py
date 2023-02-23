@@ -30,6 +30,9 @@ class Departement:
             total += crime.value
         return total
 
+    def taux_crime(self) -> float:
+        return self.total_crimes() / self.population
+
 # Class Departements which inehrits from List of object of type Departement with type hints
 class Departements(List[Departement]):
     pass
@@ -162,6 +165,14 @@ class Data(BaseModel):
 
 # print(Data.schema_json(indent=2))
 
-external_data = {'deps':[{'departement': '2A', 'taux_criminalite': 0.34, 'gagnant': "LePPEN"}]}
+external_data = {}
+external_data['deps'] = []
+for departement in departements:
+    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime(), 'gagnant': departement.gagnant})
+
 user = Data(**external_data)
-# print(user)
+
+# We export json to file
+with open('data.json', 'w') as outfile:
+    json.dump(user.dict(), outfile, indent=2)
+    
