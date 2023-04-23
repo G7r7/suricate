@@ -6,6 +6,10 @@ import os
 from pydantic import BaseModel
 import json
 from typing import List, Optional
+import sys
+import os
+
+pd.set_option('mode.chained_assignment', None)
 
 # Class Crime wich is an object with a name, a code and an integer value (with type hints) 
 class Crime:
@@ -37,8 +41,6 @@ class Departement:
 # Class Departements which inehrits from List of object of type Departement with type hints
 class Departements(List[Departement]):
     pass
-
-print(pd. __version__)
 
 nomFichier = 'elections.xlsx'
 # if not os.path.isfile(nomFichier):
@@ -164,12 +166,41 @@ class DataForOneDep(BaseModel):
 class Data(BaseModel):
     deps: List[DataForOneDep] = []
 
-# print(Data.schema_json(indent=2))
+
+##############################################################################
+##############################################################################
+##############################################################################
+# Parse args
+##############################################################################
+##############################################################################
+crimes_args = []
+
+if(len(sys.argv) > 1):
+    if (sys.argv[1] == "-h" or sys.argv[1] == "--help"):
+        print("usage: python main.py [<crime-index>...]")
+        print("parameters:")
+        print("crime-index: crime index that we will be added to the calculation (default: all indexes) ")
+        print("List of available crime indexes:")
+        # Print the crimes indexes and their description
+        for i, j in crimes_index.iterrows():
+            print(j[0], j[1])
+        exit(0)
+
+
+    for crime_arg in sys.argv[1:]:
+        crimes_args.append(int(crime_arg))
+
+
+############################################################################
+############################################################################
+# Start processing the data
+##############################################################################
+##############################################################################
 
 external_data = {}
 external_data['deps'] = []
 for departement in departements:
-    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime([]), 'gagnant': departement.gagnant})
+    external_data['deps'].append({'departement': departement.code, 'taux_criminalite': departement.taux_crime(crimes_args), 'gagnant': departement.gagnant})
 
 user = Data(**external_data)
 
